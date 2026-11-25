@@ -64,6 +64,146 @@ input:focus-visible {
   overflow: hidden;
 }
 
+.title-screen-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.title-screen {
+  position: relative;
+  width: min(100%, 760px);
+  min-height: 600px;
+  display: block;
+  overflow: hidden;
+  padding: clamp(30px, 7vw, 76px);
+  border: 1px solid #38566a;
+  border-radius: 22px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(84, 157, 176, .2), transparent 58%),
+    linear-gradient(155deg, rgba(20, 42, 59, .98), rgba(7, 18, 30, .98));
+  box-shadow: 0 28px 90px rgba(0, 0, 0, .45), inset 0 1px rgba(216, 240, 248, .08);
+  text-align: center;
+}
+.title-screen-copy {
+  position: absolute;
+  top: 9%;
+  left: 50%;
+  width: calc(100% - 60px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-50%);
+}
+.title-screen::before,
+.title-screen::after {
+  position: absolute;
+  width: 220px;
+  height: 1px;
+  content: "";
+  background: linear-gradient(90deg, transparent, rgba(136, 211, 221, .45), transparent);
+}
+.title-screen::before { top: 24px; }
+.title-screen::after { bottom: 24px; }
+.title-screen-mark {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border: 1px solid #5b8291;
+  border-radius: 50%;
+  color: #a4e8ec;
+  font-size: 34px;
+  box-shadow: 0 0 28px rgba(101, 202, 211, .16);
+}
+.title-screen-eyebrow {
+  margin: 28px 0 12px;
+  color: #8bc6d1;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .2em;
+}
+.title-screen h1 {
+  margin: 0;
+  color: #f0f7fa;
+  font-size: clamp(36px, 6vw, 64px);
+  letter-spacing: -.045em;
+  line-height: 1;
+  text-shadow: 0 5px 28px rgba(106, 192, 204, .18);
+}
+.title-screen-story {
+  max-width: 470px;
+  margin: 22px 0 0;
+  color: #b6c8d1;
+  font-size: 16px;
+  line-height: 1.7;
+}
+.title-screen-details {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 26px 0 30px;
+}
+.title-screen-details span {
+  padding: 7px 12px;
+  border: 1px solid #39596b;
+  border-radius: 999px;
+  background: rgba(26, 54, 72, .68);
+  color: #a9c5d0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+.title-screen-message { margin: -12px 0 18px; color: #ffd5a3; font-size: 12px; }
+@keyframes start-game-pulse {
+  0%,
+  100% { opacity: .72; }
+  50% { opacity: 1; }
+}
+.start-game-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 220px;
+  min-height: 54px;
+  margin: 0;
+  padding: 0 28px;
+  border: 1px solid #94e5e6;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #287987, #1d5b70);
+  box-shadow: 0 8px 26px rgba(34, 134, 151, .25);
+  color: #f4ffff;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  animation: start-game-pulse 1.8s ease-in-out infinite;
+  transition: filter .16s ease, transform .16s ease, box-shadow .16s ease;
+  transform: translate(-50%, -50%);
+}
+.start-game-button:hover,
+.start-game-button:focus-visible {
+  animation-play-state: paused;
+  opacity: 1;
+  filter: brightness(1.15);
+  transform: translate(-50%, calc(-50% - 2px));
+  box-shadow: 0 12px 32px rgba(34, 160, 174, .35);
+}
+@media (prefers-reduced-motion: reduce) {
+  .start-game-button { animation: none; }
+}
+.title-screen-saved {
+  position: absolute;
+  right: 0;
+  bottom: 38px;
+  left: 0;
+  margin: 0;
+  color: #87a7b3;
+  font-size: 11px;
+  font-style: italic;
+  text-align: center;
+}
+
 .game-header {
   height: 46px;
   display: flex;
@@ -1121,6 +1261,10 @@ input:focus-visible {
     align-content: start;
   }
 
+  .title-screen-shell {
+    display: flex;
+  }
+
   .game-header { grid-area: header; }
   .room-stage {
     grid-area: room;
@@ -1183,6 +1327,12 @@ input:focus-visible {
 
 @media (max-width: 700px) {
   .game-shell { width: 100%; padding: 7px 7px 12px; }
+  .title-screen { min-height: 540px; padding: 30px 22px; }
+  .title-screen-copy { top: 5%; width: calc(100% - 44px); }
+  .title-screen-eyebrow { margin: 16px 0 8px; font-size: 9px; letter-spacing: .12em; }
+  .title-screen-story { margin-top: 14px; font-size: 13px; line-height: 1.55; }
+  .title-screen-details { gap: 6px; margin: 22px 0 26px; }
+  .title-screen-details span { padding: 6px 9px; font-size: 9px; }
   .game-header { height: 62px; align-items: center; }
   .game-header h1 { max-width: 150px; line-height: 1.15; font-size: 12px; }
   .game-header-actions { gap: 4px; }

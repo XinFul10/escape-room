@@ -14,6 +14,7 @@ interface PersistedGame {
 export interface PersistenceStatus {
   ready: boolean;
   message: string | null;
+  hasSave: boolean;
 }
 
 function removeUnusedUvFlashlight(value: unknown): unknown {
@@ -72,6 +73,7 @@ export function usePersistedState(
 ): PersistenceStatus {
   const [ready, setReady] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [hasSave, setHasSave] = useState(false);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -125,6 +127,7 @@ export function usePersistedState(
         };
 
         dispatch({ type: 'LOAD', state: restoredState });
+        setHasSave(true);
       } else {
         dispatch({ type: 'NEW_GAME', runNumbers: createRunNumbers() });
       }
@@ -160,5 +163,5 @@ export function usePersistedState(
     };
   }, [ready, state]);
 
-  return { ready, message };
+  return { ready, message, hasSave };
 }

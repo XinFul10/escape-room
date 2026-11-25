@@ -29,6 +29,8 @@ npm run build
   continuous route from the generator input to its output. The exit code appears
   on the desk monitor as shape pairs after power is restored.
 - Selecting a puzzle opens its interaction panel in a modal.
+- The title screen appears before each session; starting or continuing begins
+  the countdown and room ambience.
 - `data/runNumbers.ts` generates fresh radio, cabinet, and exit numbers for
   each new run; these values are saved so refreshes keep the same clues.
 - A starting flashlight can be toggled from the inventory. While the generator

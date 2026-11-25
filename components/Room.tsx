@@ -18,7 +18,7 @@ import { getPuzzleSolution, isCorrectSolution } from '../state/gameReducer';
 const roomPuzzles = Object.values(puzzles);
 
 export function Room() {
-  const { state, dispatch, persistence } = useGame();
+  const { state, dispatch, persistence, gameStarted, startGame } = useGame();
   const [selectedObjectId, setSelectedObjectId] =
     useState<RoomObjectId>('radio');
   const [showObjectCard, setShowObjectCard] = useState(false);
@@ -55,6 +55,43 @@ export function Room() {
     return (
       <main className="game-shell">
         <p role="status">Preparing a randomized room...</p>
+      </main>
+    );
+  }
+  if (!gameStarted) {
+    const savedRun = persistence.hasSave && state.status === 'playing';
+    return (
+      <main className="game-shell title-screen-shell">
+        <section className="title-screen" aria-labelledby="title-screen-heading">
+          <div className="title-screen-copy">
+            <div className="title-screen-mark" aria-hidden="true"></div>
+            <p className="title-screen-eyebrow">ARCTIC RESEARCH STATION · AIRLOCK INCIDENT</p>
+            <p className="title-screen-story">
+              The station has gone dark. Restore the power, uncover the exit code,
+              and escape before the airlock seals.
+            </p>
+            {persistence.message && (
+              <p className="title-screen-message" role="status">{persistence.message}</p>
+            )}
+          </div>
+          <button
+            type="button"
+            className="start-game-button"
+            onClick={() => {
+              if (state.status !== 'playing') restartGame();
+              startGame();
+            }}
+          >
+            {savedRun
+              ? 'Continue Game'
+              : persistence.hasSave
+                ? 'Start New Game'
+                : 'Start Game'}
+          </button>
+          {savedRun && (
+            <p className="title-screen-saved">Your progress is saved in this browser.</p>
+          )}
+        </section>
       </main>
     );
   }
