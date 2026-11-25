@@ -11,6 +11,7 @@ import type {
 } from '../types/game';
 
 export const MAX_HINTS = 3;
+export const HINT_COOLDOWN_SECONDS = 30;
 export const INITIAL_TIME_SECONDS = 12 * 60;
 
 const initialUnlockedObjects: RoomObjectId[] = ['radio'];
@@ -33,6 +34,7 @@ export function createInitialGameState(
     solvedPuzzles: [],
     unlockedObjects: [...initialUnlockedObjects],
     hintsUsed: 0,
+    hintCooldown: 0,
     timeLeft: INITIAL_TIME_SECONDS,
     status: 'playing',
     feedback: 'Find a way out of the station.',
@@ -99,6 +101,7 @@ export function isValidGameState(value: unknown): value is GameState {
     !Array.isArray(state.solvedPuzzles) ||
     !Array.isArray(state.unlockedObjects) ||
     !Number.isInteger(state.hintsUsed) ||
+    !Number.isInteger(state.hintCooldown) ||
     !Number.isInteger(state.timeLeft) ||
     typeof state.feedback !== 'string' ||
     (state.status !== 'playing' && state.status !== 'won' && state.status !== 'lost')
@@ -109,6 +112,8 @@ export function isValidGameState(value: unknown): value is GameState {
   if (
     state.hintsUsed! < 0 ||
     state.hintsUsed! > MAX_HINTS ||
+    state.hintCooldown! < 0 ||
+    state.hintCooldown! > HINT_COOLDOWN_SECONDS ||
     state.timeLeft! < 0 ||
     state.timeLeft! > INITIAL_TIME_SECONDS ||
     (state.status === 'playing' && state.timeLeft === 0) ||
@@ -308,9 +313,16 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (state.hintsUsed >= MAX_HINTS) {
         return withFeedback(state, 'No hints remain.');
       }
+      if (state.hintCooldown > 0) {
+        return withFeedback(
+          state,
+          `Wait ${state.hintCooldown} seconds before using another hint.`,
+        );
+      }
       return {
         ...state,
         hintsUsed: state.hintsUsed + 1,
+        hintCooldown: HINT_COOLDOWN_SECONDS,
         feedback: puzzle.hint,
       };
     }
@@ -324,7 +336,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           feedback: 'Time is up. The station is sealed.',
         };
       }
-      return { ...state, timeLeft: state.timeLeft - 1 };
+      return {
+        ...state,
+        timeLeft: state.timeLeft - 1,
+        hintCooldown: Math.max(0, state.hintCooldown - 1),
+      };
     }
   }
 }

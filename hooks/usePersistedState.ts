@@ -6,7 +6,7 @@ import type { GameAction, GameState } from '../types/game';
 const STORAGE_KEY = 'arctic-escape-room-save';
 
 interface PersistedGame {
-  version: 3;
+  version: 4;
   savedAt: number;
   state: GameState;
 }
@@ -25,7 +25,7 @@ function readPersistedGame(value: unknown): PersistedGame | null {
     state?: unknown;
   };
   if (
-    (saved.version !== 2 && saved.version !== 3) ||
+    (saved.version !== 2 && saved.version !== 3 && saved.version !== 4) ||
     typeof saved.savedAt !== 'number' ||
     !Number.isFinite(saved.savedAt) ||
     saved.savedAt <= 0 ||
@@ -36,19 +36,24 @@ function readPersistedGame(value: unknown): PersistedGame | null {
   }
 
   let state: unknown = saved.state;
-  if (saved.version === 2) {
+  if (saved.version !== 4) {
     const legacyState = saved.state as Partial<GameState>;
-    if (!Array.isArray(legacyState.inventory)) return null;
+    if (saved.version === 2 && !Array.isArray(legacyState.inventory)) return null;
     state = {
       ...legacyState,
-      inventory: legacyState.inventory.includes('flashlight')
-        ? legacyState.inventory
-        : [...legacyState.inventory, 'flashlight'],
+      ...(saved.version === 2
+        ? {
+            inventory: legacyState.inventory!.includes('flashlight')
+              ? legacyState.inventory
+              : [...legacyState.inventory!, 'flashlight'],
+          }
+        : {}),
+      hintCooldown: 0,
     };
   }
 
   if (!isValidGameState(state)) return null;
-  return { version: 3, savedAt: saved.savedAt, state };
+  return { version: 4, savedAt: saved.savedAt, state };
 }
 
 export function usePersistedState(
@@ -99,6 +104,10 @@ export function usePersistedState(
         const restoredState: GameState = {
           ...savedGame.state,
           timeLeft,
+          hintCooldown: Math.max(
+            0,
+            savedGame.state.hintCooldown - elapsedSeconds,
+          ),
           status:
             savedGame.state.status === 'playing' && timeLeft === 0
               ? 'lost'
@@ -120,7 +129,7 @@ export function usePersistedState(
     if (!ready) return;
 
     const saved: PersistedGame = {
-      version: 3,
+      version: 4,
       savedAt: Date.now(),
       state,
     };

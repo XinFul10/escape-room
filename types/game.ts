@@ -50,6 +50,7 @@ export interface GameState {
   solvedPuzzles: PuzzleId[];
   unlockedObjects: RoomObjectId[];
   hintsUsed: number;
+  hintCooldown: number;
   timeLeft: number;
   status: GameStatus;
   feedback: string;

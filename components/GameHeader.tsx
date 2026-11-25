@@ -26,9 +26,27 @@ export function GameHeader({ puzzleId, onRestart }: GameHeaderProps) {
           type="button"
           className="hint-button"
           onClick={() => dispatch({ type: 'USE_HINT', puzzleId })}
-          disabled={state.status !== 'playing' || state.hintsUsed >= MAX_HINTS}
+          disabled={
+            state.status !== 'playing' ||
+            state.hintsUsed >= MAX_HINTS ||
+            state.hintCooldown > 0
+          }
+          aria-label={
+            state.hintCooldown > 0
+              ? `Hints remaining: ${MAX_HINTS - state.hintsUsed}. Available in ${state.hintCooldown} seconds.`
+              : `Hints remaining: ${MAX_HINTS - state.hintsUsed}`
+          }
+          title={
+            state.hintCooldown > 0
+              ? `Next hint available in ${state.hintCooldown} seconds`
+              : 'Use a hint'
+          }
         >
-          Hints <b>{MAX_HINTS - state.hintsUsed}</b>
+          <span>Hints</span>
+          <b>{MAX_HINTS - state.hintsUsed}</b>
+          {state.hintCooldown > 0 && (
+            <span className="hint-cooldown">{state.hintCooldown}s</span>
+          )}
         </button>
         <div
           className={`timer-box ${state.timeLeft <= 60 ? 'timer-low' : ''}`}

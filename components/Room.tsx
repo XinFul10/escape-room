@@ -259,7 +259,7 @@ export function Room() {
                   </span>
                 </>
               ) : (
-                <span>NO SIGNAL</span>
+                <span></span>
               )}
             </div>
           </div>

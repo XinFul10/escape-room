@@ -11,7 +11,7 @@ export const puzzles: Record<PuzzleId, PuzzleDefinition> = {
     grants: ['brassKey'],
     solution: null,
     clue: 'The station weather band is below its backup relay frequency. A hidden note gives the backup and the offset.',
-    hint: 'Inspect the folded slip partly hidden beneath the potted plant on the desk. Compare the backup frequency with the stated offset.',
+    hint: 'Two frequencies are noted near the desk. The receiver uses the lower band; work out how far it sits from the relay.',
   },
   supplyCabinet: {
     id: 'supplyCabinet',
@@ -23,7 +23,7 @@ export const puzzles: Record<PuzzleId, PuzzleDefinition> = {
     grants: ['uvFlashlight', 'fuse'],
     solution: null,
     clue: 'The cabinet label uses pairs of shapes instead of digits. Search the room for the full 0–9 cipher.',
-    hint: 'Inspect the faded calibration card tucked behind the books. It maps two-shape pairs to digits.',
+    hint: 'The cabinet speaks in pairs of shapes. Somewhere nearby, the station explains how those pairs represent numbers.',
   },
   generatorPanel: {
     id: 'generatorPanel',
@@ -35,7 +35,7 @@ export const puzzles: Record<PuzzleId, PuzzleDefinition> = {
     grants: ['accessCard'],
     solution: 'POWER-ROUTED',
     clue: 'Rotate the switchboard tiles to carry power from the lower-left input to the lower-right output.',
-    hint: 'Each click rotates one tile clockwise. Follow matching wire ends through neighboring tiles until the output connects.',
+    hint: 'Power cannot jump a gap. Trace a continuous route from the input, and watch where each tile sends it next.',
   },
   exitKeypad: {
     id: 'exitKeypad',
@@ -47,6 +47,6 @@ export const puzzles: Record<PuzzleId, PuzzleDefinition> = {
     grants: [],
     solution: null,
     clue: 'The powered monitor displays the exit code as shape pairs. Decode them with the calibration cipher.',
-    hint: 'Restore generator power, then compare the four pairs on the monitor with the cipher card behind the books.',
+    hint: 'The powered display uses a code you have seen elsewhere. Translate each pair in order before entering it.',
   },
 };

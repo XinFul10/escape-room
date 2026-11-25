@@ -35,6 +35,8 @@ npm run build
   is unpowered, its beam follows the pointer across the dark room.
 - Puzzle rewards open a confirmation dialog before entering the inventory.
   The player must confirm to add them.
+- Hints give indirect nudges, with a 30-second cooldown between uses. Cooldown
+  progress is saved and accounts for time spent away from the game.
 - Existing saves are migrated to include the starting flashlight while
   preserving the player's progress.
 - `state/gameReducer.ts` owns game rules and rejects actions that violate
