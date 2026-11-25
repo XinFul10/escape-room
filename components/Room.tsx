@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent, type PointerEvent as ReactPointerEvent, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type PointerEvent as ReactPointerEvent, type CSSProperties } from 'react';
 import { items } from '../data/items';
 import { puzzles } from '../data/puzzles';
 import { isCircuitComplete, INITIAL_CIRCUIT_ROTATIONS } from '../data/circuit';
@@ -29,6 +29,21 @@ export function Room() {
   const [flashlightOn, setFlashlightOn] = useState(false);
   const [flashlightPosition, setFlashlightPosition] = useState({ x: 50, y: 50 });
   const [circuitRotations, setCircuitRotations] = useState(INITIAL_CIRCUIT_ROTATIONS);
+  const generatorPuzzleDialog = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const dialog = generatorPuzzleDialog.current;
+    if (!showObjectCard || selectedObjectId !== 'generator') {
+      if (dialog?.open) dialog.close();
+      return;
+    }
+    if (!dialog || dialog.open) return;
+
+    dialog.showModal();
+    return () => {
+      if (dialog.open) dialog.close();
+    };
+  }, [selectedObjectId, showObjectCard]);
 
   const selectedPuzzle = roomPuzzles.find(
     (puzzle) => puzzle.objectId === selectedObjectId,
@@ -52,8 +67,9 @@ export function Room() {
   const puzzleSolution = getPuzzleSolution(state, selectedPuzzle.id);
   const cabinetCipher = encodeNumber(String(state.runNumbers.cabinetCode));
   const exitCodeCipher = encodeNumber(String(state.runNumbers.exitCode));
+  const generatorSolved = state.solvedPuzzles.includes('generatorPanel');
   const circuitPowered = isCircuitComplete(circuitRotations) ||
-    state.solvedPuzzles.includes('generatorPanel');
+    generatorSolved;
 
   function restartGame() {
     setCircuitRotations(INITIAL_CIRCUIT_ROTATIONS);
@@ -115,6 +131,101 @@ export function Room() {
     }
   }
 
+  const objectCardContent = (
+    <>
+      <div className="object-card-heading">
+        <div>
+          <span>Selected object</span>
+          <h2 id="selected-object-title">{selectedPuzzle.name}</h2>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            if (selectedObjectId === 'generator') {
+              generatorPuzzleDialog.current?.close();
+            } else {
+              setShowObjectCard(false);
+            }
+          }}
+          aria-label="Close selected object"
+        >
+          ×
+        </button>
+      </div>
+
+      {!isUnlocked ? (
+        <p className="object-card-message">Locked. Solve the previous step first.</p>
+      ) : (
+        <>
+          <p className="object-card-clue">{selectedPuzzle.clue}</p>
+          {missingItems.length > 0 && !isSolved && (
+            <p className="required-items">
+              Requires: {missingItems.map((id) => items[id].name).join(', ')}
+            </p>
+          )}
+
+          {selectedItemId && selectedItemId !== 'flashlight' && (
+            <button
+              type="button"
+              disabled={state.status !== 'playing'}
+              onClick={() =>
+                dispatch({
+                  type: 'USE_ITEM',
+                  itemId: selectedItemId,
+                  objectId: selectedObjectId,
+                })
+              }
+              className="scene-action use-item-action"
+            >
+              Use {items[selectedItemId].name}
+            </button>
+          )}
+
+          {isSolved ? (
+            <p className="object-card-message solved-message">Puzzle solved</p>
+          ) : selectedPuzzle.interaction === 'keypad' ? (
+            <KeypadLock
+              length={puzzleSolution.length}
+              value={answer}
+              onChange={setAnswer}
+              onSubmit={submitSolution}
+              disabled={state.status !== 'playing' || missingItems.length > 0}
+            />
+          ) : selectedPuzzle.interaction === 'circuit' ? (
+            <CircuitBoard
+              rotations={circuitRotations}
+              powered={circuitPowered}
+              disabled={state.status !== 'playing' || missingItems.length > 0 || isSolved}
+              onRotate={rotateCircuitTile}
+            />
+          ) : (
+            <form onSubmit={submitNonKeypadPuzzle} className="scene-form">
+              <label>
+                Tune frequency
+                <input
+                  value={answer}
+                  onChange={(event) => setAnswer(event.target.value)}
+                  inputMode="numeric"
+                  autoComplete="off"
+                  aria-label={`${selectedPuzzle.name} solution`}
+                  disabled={state.status !== 'playing'}
+                  placeholder="**"
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={state.status !== 'playing'}
+                className="scene-action"
+              >
+                Check
+              </button>
+            </form>
+          )}
+        </>
+      )}
+    </>
+  );
+
   return (
     <main className="game-shell">
       <GameHeader puzzleId={selectedPuzzle.id} onRestart={restartGame} />
@@ -130,6 +241,33 @@ export function Room() {
           <div className="room-window">
             <span className="room-window-bar room-window-bar-x" />
             <span className="room-window-bar room-window-bar-y" />
+          </div>
+
+          <div
+            className={`wall-tv${generatorSolved ? ' wall-tv-powered' : ''}`}
+            role="img"
+            aria-label={
+              generatorSolved
+                ? 'Wall-mounted television showing the exit code as a shape cipher'
+                : 'Wall-mounted television with no signal'
+            }
+          >
+            <div className="wall-tv-screen">
+              {generatorSolved ? (
+                <>
+                  <small>EXIT CODE</small>
+                  <span className="tv-cipher">
+                    {exitCodeCipher.map((pair, index) => (
+                      <span key={index}>
+                        {pair.map((shape) => shapeGlyphs[shape]).join('')}
+                      </span>
+                    ))}
+                  </span>
+                </>
+              ) : (
+                <span>NO SIGNAL</span>
+              )}
+            </div>
           </div>
 
           <button
@@ -236,27 +374,8 @@ export function Room() {
 
         <div className="desk">
           <span className="desk-top" />
-          <span className="desk-monitor">
-            {state.solvedPuzzles.includes('generatorPanel') ? (
-              <>
-                <small>EXIT CODE</small>
-                <span className="monitor-cipher" aria-label="Exit code shown as shape cipher">
-                  {exitCodeCipher.map((pair, index) => (
-                    <span key={index}>
-                      {pair.map((shape) => shapeGlyphs[shape]).join('')}
-                    </span>
-                  ))}
-                </span>
-              </>
-            ) : (
-              <span>NO SIGNAL</span>
-            )}
-          </span>
           <span className="desk-lamp"><i /></span>
           <span className="desk-books" />
-          <span className="desk-plants">
-            <i /><i /><i />
-          </span>
           <button
             type="button"
             className="desk-sheet"
@@ -345,88 +464,20 @@ export function Room() {
         )}
       </section>
 
-      {showObjectCard && (
+      {showObjectCard && selectedObjectId === 'generator' && (
+        <dialog
+          ref={generatorPuzzleDialog}
+          className="object-card generator-puzzle-dialog"
+          aria-labelledby="selected-object-title"
+          onClose={() => setShowObjectCard(false)}
+        >
+          {objectCardContent}
+        </dialog>
+      )}
+
+      {showObjectCard && selectedObjectId !== 'generator' && (
         <aside className="object-card" aria-live="polite">
-          <div className="object-card-heading">
-            <div>
-              <span>Selected object</span>
-              <h2>{selectedPuzzle.name}</h2>
-            </div>
-            <button type="button" onClick={() => setShowObjectCard(false)} aria-label="Close selected object">
-              ×
-            </button>
-          </div>
-
-          {!isUnlocked ? (
-            <p className="object-card-message">Locked. Solve the previous step first.</p>
-          ) : (
-            <>
-              <p className="object-card-clue">{selectedPuzzle.clue}</p>
-              {missingItems.length > 0 && !isSolved && (
-                <p className="required-items">
-                  Requires: {missingItems.map((id) => items[id].name).join(', ')}
-                </p>
-              )}
-
-              {selectedItemId && selectedItemId !== 'flashlight' && (
-                <button
-                  type="button"
-                  disabled={state.status !== 'playing'}
-                  onClick={() =>
-                    dispatch({
-                      type: 'USE_ITEM',
-                      itemId: selectedItemId,
-                      objectId: selectedObjectId,
-                    })
-                  }
-                  className="scene-action use-item-action"
-                >
-                  Use {items[selectedItemId].name}
-                </button>
-              )}
-
-              {isSolved ? (
-                <p className="object-card-message solved-message">Puzzle solved</p>
-              ) : selectedPuzzle.interaction === 'keypad' ? (
-                <KeypadLock
-                  length={puzzleSolution.length}
-                  value={answer}
-                  onChange={setAnswer}
-                  onSubmit={submitSolution}
-                  disabled={state.status !== 'playing' || missingItems.length > 0}
-                />
-              ) : selectedPuzzle.interaction === 'circuit' ? (
-                <CircuitBoard
-                  rotations={circuitRotations}
-                  powered={circuitPowered}
-                  disabled={state.status !== 'playing' || missingItems.length > 0 || isSolved}
-                  onRotate={rotateCircuitTile}
-                />
-              ) : (
-                <form onSubmit={submitNonKeypadPuzzle} className="scene-form">
-                  <label>
-                    Tune frequency
-                    <input
-                      value={answer}
-                      onChange={(event) => setAnswer(event.target.value)}
-                      inputMode="numeric"
-                      autoComplete="off"
-                      aria-label={`${selectedPuzzle.name} solution`}
-                      disabled={state.status !== 'playing'}
-                      placeholder="**"
-                    />
-                  </label>
-                  <button
-                    type="submit"
-                    disabled={state.status !== 'playing'}
-                    className="scene-action"
-                  >
-                    Check
-                  </button>
-                </form>
-              )}
-            </>
-          )}
+          {objectCardContent}
         </aside>
       )}
 

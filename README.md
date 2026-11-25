@@ -28,10 +28,13 @@ npm run build
 - `data/circuit.ts` defines the switchboard connections and checks for a
   continuous route from the generator input to its output. The exit code appears
   on the desk monitor as shape pairs after power is restored.
+- The generator switchboard opens in a modal puzzle panel.
 - `data/runNumbers.ts` generates fresh radio, cabinet, and exit numbers for
   each new run; these values are saved so refreshes keep the same clues.
 - A starting flashlight can be toggled from the inventory. While the generator
   is unpowered, its beam follows the pointer across the dark room.
+- Puzzle rewards open a confirmation dialog before entering the inventory.
+  The player must confirm to add them.
 - Existing saves are migrated to include the starting flashlight while
   preserving the player's progress.
 - `state/gameReducer.ts` owns game rules and rejects actions that violate
