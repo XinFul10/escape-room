@@ -28,7 +28,7 @@ npm run build
 - `data/circuit.ts` defines the switchboard connections and checks for a
   continuous route from the generator input to its output. The exit code appears
   on the desk monitor as shape pairs after power is restored.
-- The generator switchboard opens in a modal puzzle panel.
+- Selecting a puzzle opens its interaction panel in a modal.
 - `data/runNumbers.ts` generates fresh radio, cabinet, and exit numbers for
   each new run; these values are saved so refreshes keep the same clues.
 - A starting flashlight can be toggled from the inventory. While the generator

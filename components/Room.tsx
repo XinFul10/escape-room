@@ -29,11 +29,11 @@ export function Room() {
   const [flashlightOn, setFlashlightOn] = useState(false);
   const [flashlightPosition, setFlashlightPosition] = useState({ x: 50, y: 50 });
   const [circuitRotations, setCircuitRotations] = useState(INITIAL_CIRCUIT_ROTATIONS);
-  const generatorPuzzleDialog = useRef<HTMLDialogElement>(null);
+  const puzzleDialog = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
-    const dialog = generatorPuzzleDialog.current;
-    if (!showObjectCard || selectedObjectId !== 'generator') {
+    const dialog = puzzleDialog.current;
+    if (!showObjectCard) {
       if (dialog?.open) dialog.close();
       return;
     }
@@ -43,7 +43,7 @@ export function Room() {
     return () => {
       if (dialog.open) dialog.close();
     };
-  }, [selectedObjectId, showObjectCard]);
+  }, [showObjectCard, selectedObjectId]);
 
   const selectedPuzzle = roomPuzzles.find(
     (puzzle) => puzzle.objectId === selectedObjectId,
@@ -140,13 +140,7 @@ export function Room() {
         </div>
         <button
           type="button"
-          onClick={() => {
-            if (selectedObjectId === 'generator') {
-              generatorPuzzleDialog.current?.close();
-            } else {
-              setShowObjectCard(false);
-            }
-          }}
+          onClick={() => puzzleDialog.current?.close()}
           aria-label="Close selected object"
         >
           ×
@@ -374,7 +368,6 @@ export function Room() {
 
         <div className="desk">
           <span className="desk-top" />
-          <span className="desk-lamp"><i /></span>
           <span className="desk-books" />
           <button
             type="button"
@@ -434,11 +427,6 @@ export function Room() {
           </aside>
         )}
 
-        <div className="desk-trunk">
-          <span>? ? ?</span>
-          <i>⚿</i>
-        </div>
-
         {state.status !== 'playing' && (
           <div className="game-result" role="status">
             <h2>{state.status === 'won' ? 'You escaped!' : 'Time is up'}</h2>
@@ -464,21 +452,15 @@ export function Room() {
         )}
       </section>
 
-      {showObjectCard && selectedObjectId === 'generator' && (
+      {showObjectCard && (
         <dialog
-          ref={generatorPuzzleDialog}
-          className="object-card generator-puzzle-dialog"
+          ref={puzzleDialog}
+          className="object-card puzzle-dialog"
           aria-labelledby="selected-object-title"
           onClose={() => setShowObjectCard(false)}
         >
           {objectCardContent}
         </dialog>
-      )}
-
-      {showObjectCard && selectedObjectId !== 'generator' && (
-        <aside className="object-card" aria-live="polite">
-          {objectCardContent}
-        </aside>
       )}
 
       <FeedbackToast />

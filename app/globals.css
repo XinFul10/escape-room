@@ -727,56 +727,6 @@ input:focus-visible {
   transform: skewY(-5deg);
 }
 
-.desk-trunk {
-  position: absolute;
-  z-index: 9;
-  right: 24%;
-  bottom: 18%;
-  width: 142px;
-  height: 78px;
-  border: 6px solid #74505a;
-  border-radius: 8px 8px 18px 18px;
-  background: #a56d62;
-  box-shadow: 7px 9px rgba(74, 61, 67, .25);
-  transform: rotate(-2deg);
-}
-.desk-trunk::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 24px;
-  height: 5px;
-  background: #75515a;
-}
-.desk-trunk span {
-  position: absolute;
-  right: 16px;
-  top: 35px;
-  width: 68px;
-  height: 24px;
-  border: 3px solid #7a5951;
-  background: #f3ecd8;
-  color: #4d6575;
-  text-align: center;
-  font-family: ui-monospace, monospace;
-  font-size: 12px;
-  line-height: 20px;
-}
-.desk-trunk i {
-  position: absolute;
-  left: 26px;
-  bottom: 8px;
-  width: 27px;
-  height: 27px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: #eab45d;
-  color: #5d4b3d;
-  font-style: normal;
-}
-
 .object-card {
   position: relative;
   z-index: 1;
@@ -791,7 +741,7 @@ input:focus-visible {
   box-shadow: 0 12px 28px rgba(19, 35, 48, .45);
   padding: 12px;
 }
-.object-card.generator-puzzle-dialog {
+.object-card.puzzle-dialog {
   position: fixed;
   inset: 0;
   width: min(760px, calc(100vw - 32px));
@@ -800,11 +750,11 @@ input:focus-visible {
   margin: auto;
   overflow: auto;
 }
-.object-card.generator-puzzle-dialog::backdrop {
+.object-card.puzzle-dialog::backdrop {
   background: rgba(3, 10, 16, .76);
   backdrop-filter: blur(3px);
 }
-.object-card.generator-puzzle-dialog .object-card-clue { display: block; }
+.object-card.puzzle-dialog .object-card-clue { display: block; }
 .object-card-heading { display: flex; justify-content: space-between; align-items: start; }
 .object-card-heading span { color: #7ec9d3; font-size: 10px; text-transform: uppercase; letter-spacing: .12em; }
 .object-card-heading h2 { margin: 3px 0 0; font-size: 17px; }
@@ -1270,8 +1220,6 @@ input:focus-visible {
     top: 28%;
     width: min(260px, 88%);
   }
-  .desk-trunk { right: 20%; width: 120px; height: 68px; }
-
   .object-card {
     left: auto;
     right: auto;
