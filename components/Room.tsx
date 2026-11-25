@@ -1,0 +1,442 @@
+'use client';
+
+import { useState, type FormEvent, type PointerEvent as ReactPointerEvent, type CSSProperties } from 'react';
+import { items } from '../data/items';
+import { puzzles } from '../data/puzzles';
+import { isCircuitComplete, INITIAL_CIRCUIT_ROTATIONS } from '../data/circuit';
+import { createRunNumbers } from '../data/runNumbers';
+import { digitCipher, encodeNumber, shapeGlyphs } from '../data/shapeCipher';
+import { CircuitBoard } from './CircuitBoard';
+import type { ItemId, RoomObjectId } from '../types/game';
+import { FeedbackToast } from './FeedbackToast';
+import { GameHeader } from './GameHeader';
+import { InventoryBar } from './InventoryBar';
+import { KeypadLock } from './KeypadLock';
+import { useGame } from './GameProvider';
+import { getPuzzleSolution, isCorrectSolution } from '../state/gameReducer';
+
+const roomPuzzles = Object.values(puzzles);
+
+export function Room() {
+  const { state, dispatch, persistence } = useGame();
+  const [selectedObjectId, setSelectedObjectId] =
+    useState<RoomObjectId>('radio');
+  const [showObjectCard, setShowObjectCard] = useState(false);
+  const [showMaintenanceNote, setShowMaintenanceNote] = useState(false);
+  const [showShapeCipher, setShowShapeCipher] = useState(false);
+  const [selectedItemId, setSelectedItemId] = useState<ItemId | null>(null);
+  const [answer, setAnswer] = useState('');
+  const [flashlightOn, setFlashlightOn] = useState(false);
+  const [flashlightPosition, setFlashlightPosition] = useState({ x: 50, y: 50 });
+  const [circuitRotations, setCircuitRotations] = useState(INITIAL_CIRCUIT_ROTATIONS);
+
+  const selectedPuzzle = roomPuzzles.find(
+    (puzzle) => puzzle.objectId === selectedObjectId,
+  );
+  if (!selectedPuzzle) {
+    return <main className="game-shell">Room configuration is incomplete.</main>;
+  }
+  if (!persistence.ready) {
+    return (
+      <main className="game-shell">
+        <p role="status">Preparing a randomized room...</p>
+      </main>
+    );
+  }
+
+  const isUnlocked = state.unlockedObjects.includes(selectedObjectId);
+  const isSolved = state.solvedPuzzles.includes(selectedPuzzle.id);
+  const missingItems = selectedPuzzle.requires.filter(
+    (itemId) => !state.inventory.includes(itemId),
+  );
+  const puzzleSolution = getPuzzleSolution(state, selectedPuzzle.id);
+  const cabinetCipher = encodeNumber(String(state.runNumbers.cabinetCode));
+  const exitCodeCipher = encodeNumber(String(state.runNumbers.exitCode));
+  const circuitPowered = isCircuitComplete(circuitRotations) ||
+    state.solvedPuzzles.includes('generatorPanel');
+
+  function restartGame() {
+    setCircuitRotations(INITIAL_CIRCUIT_ROTATIONS);
+    setFlashlightOn(false);
+    dispatch({
+      type: 'RESTART',
+      runNumbers: createRunNumbers(state.runNumbers),
+    });
+  }
+
+  function updateFlashlightPosition(event: ReactPointerEvent<HTMLElement>) {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    setFlashlightPosition({
+      x: ((event.clientX - bounds.left) / bounds.width) * 100,
+      y: ((event.clientY - bounds.top) / bounds.height) * 100,
+    });
+  }
+
+  function selectObject(objectId: RoomObjectId) {
+    setSelectedObjectId(objectId);
+    setShowObjectCard(true);
+    setAnswer('');
+  }
+
+  function submitSolution(solution: string): boolean {
+    if (!selectedPuzzle) return false;
+    dispatch({
+      type: 'SOLVE_PUZZLE',
+      puzzleId: selectedPuzzle.id,
+      solution,
+    });
+    return isCorrectSolution(solution, puzzleSolution);
+  }
+
+  function submitNonKeypadPuzzle(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedPuzzle) return;
+    submitSolution(answer);
+  }
+
+  function rotateCircuitTile(tileIndex: number) {
+    if (
+      !selectedPuzzle ||
+      selectedPuzzle.id !== 'generatorPanel' ||
+      state.status !== 'playing' ||
+      missingItems.length > 0 ||
+      isSolved
+    ) {
+      return;
+    }
+
+    const nextRotations = circuitRotations.map((rotation, index) =>
+      index === tileIndex ? (rotation + 1) % 4 : rotation,
+    );
+    setCircuitRotations(nextRotations);
+
+    if (isCircuitComplete(nextRotations)) {
+      submitSolution(puzzleSolution);
+    }
+  }
+
+  return (
+    <main className="game-shell">
+      <GameHeader puzzleId={selectedPuzzle.id} onRestart={restartGame} />
+
+      <section
+        className="room-stage"
+        aria-label="Interactive escape room"
+        onPointerMove={updateFlashlightPosition}
+        onPointerDown={updateFlashlightPosition}
+      >
+        <div className="room-ceiling" />
+        <div className="room-back-wall">
+          <div className="room-window">
+            <span className="room-window-bar room-window-bar-x" />
+            <span className="room-window-bar room-window-bar-y" />
+          </div>
+
+          <button
+            type="button"
+            aria-label="Emergency radio"
+            aria-pressed={selectedObjectId === 'radio'}
+            onClick={() => selectObject('radio')}
+            className="scene-hotspot radio-hotspot"
+          >
+            <span className="radio-body">
+              <span className="radio-dial" />
+            </span>
+            {state.solvedPuzzles.includes('radioReceiver') && (
+              <span className="solved-dot" aria-label="Solved" />
+            )}
+          </button>
+
+          <div className="wall-shelf">
+            <span className="shelf-book book-red" />
+            <span className="shelf-book book-gold" />
+            <span className="shelf-book book-blue" />
+            <span className="shelf-box" />
+            <button
+              type="button"
+              className="cipher-hotspot"
+              aria-label="Inspect faded shape cipher behind the books"
+              aria-expanded={showShapeCipher}
+              title="Inspect hidden clue"
+              onClick={() => {
+                setShowMaintenanceNote(false);
+                setShowShapeCipher((visible) => !visible);
+              }}
+            >
+              △ ◇ □
+            </button>
+          </div>
+
+          <button
+            type="button"
+            aria-label="Supply cabinet"
+            aria-pressed={selectedObjectId === 'cabinet'}
+            onClick={() => selectObject('cabinet')}
+            className="scene-hotspot cabinet-hotspot"
+          >
+            <span className="cabinet-body">
+              <span className="cabinet-door" />
+              <span className="cabinet-label" aria-label="Three pairs of symbols on cabinet label">
+                {cabinetCipher.map((pair, index) => (
+                  <span key={index}>
+                    {pair.map((shape) => shapeGlyphs[shape]).join('')}
+                  </span>
+                ))}
+              </span>
+              <span className="cabinet-lock">●</span>
+            </span>
+            {state.solvedPuzzles.includes('supplyCabinet') && (
+              <span className="solved-dot" aria-label="Solved" />
+            )}
+          </button>
+
+          <button
+            type="button"
+            aria-label="Generator panel"
+            aria-pressed={selectedObjectId === 'generator'}
+            onClick={() => selectObject('generator')}
+            className="scene-hotspot generator-hotspot"
+          >
+            <span
+              className={`generator-screen${circuitPowered ? ' generator-powered' : ''}`}
+              aria-label={circuitPowered ? 'Generator power restored' : 'Rotatable generator switchboard'}
+            >
+              {Array.from({ length: 9 }, (_, index) => <i key={index} />)}
+            </span>
+            {state.solvedPuzzles.includes('generatorPanel') && (
+              <span className="solved-dot" aria-label="Solved" />
+            )}
+          </button>
+
+          <div className="exit-door">
+            <span className="exit-sign" aria-hidden="true">EXIT <b>↗</b></span>
+            <button
+              type="button"
+              aria-label="Exit keypad"
+              aria-pressed={selectedObjectId === 'exitDoor'}
+              onClick={() => selectObject('exitDoor')}
+              className="scene-hotspot exit-keypad-hotspot"
+            >
+              <span className="exit-keypad" aria-hidden="true">
+                {[1, 2, 3, 4, 5, 6].map((digit) => (
+                  <i key={digit} />
+                ))}
+              </span>
+              {state.solvedPuzzles.includes('exitKeypad') && (
+                <span className="solved-dot" aria-label="Solved" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        <div className="room-floor">
+          <span className="floor-board floor-board-one" />
+          <span className="floor-board floor-board-two" />
+        </div>
+
+        <div className="desk">
+          <span className="desk-top" />
+          <span className="desk-monitor">
+            {state.solvedPuzzles.includes('generatorPanel') ? (
+              <>
+                <small>EXIT CODE</small>
+                <span className="monitor-cipher" aria-label="Exit code shown as shape cipher">
+                  {exitCodeCipher.map((pair, index) => (
+                    <span key={index}>
+                      {pair.map((shape) => shapeGlyphs[shape]).join('')}
+                    </span>
+                  ))}
+                </span>
+              </>
+            ) : (
+              <span>NO SIGNAL</span>
+            )}
+          </span>
+          <span className="desk-lamp"><i /></span>
+          <span className="desk-books" />
+          <span className="desk-plants">
+            <i /><i /><i />
+          </span>
+          <button
+            type="button"
+            className="desk-sheet"
+            aria-label="Inspect folded slip partly hidden beneath the desk plant"
+            aria-expanded={showMaintenanceNote}
+            title="Inspect hidden clue"
+            onClick={() => {
+              setShowShapeCipher(false);
+              setShowMaintenanceNote((visible) => !visible);
+            }}
+          >
+            <span className="note-scribble note-scribble-one" />
+            <span className="note-scribble note-scribble-two" />
+            <span className="note-scribble note-scribble-three" />
+          </button>
+        </div>
+
+        {showMaintenanceNote && (
+          <aside className="maintenance-note" aria-live="polite">
+            <button
+              type="button"
+              onClick={() => setShowMaintenanceNote(false)}
+              aria-label="Close maintenance note"
+            >
+              ×
+            </button>
+            <span>FIELD NOTES · RADIO DESK</span>
+            <strong>Storm procedure</strong>
+            <p>Backup relay: <b>{state.runNumbers.radioBackupFrequency} MHz</b></p>
+            <small>
+              Weather band is {state.runNumbers.weatherOffset} MHz below the backup relay.
+            </small>
+          </aside>
+        )}
+
+        {showShapeCipher && (
+          <aside className="shape-cipher-card" aria-live="polite">
+            <button
+              type="button"
+              onClick={() => setShowShapeCipher(false)}
+              aria-label="Close shape cipher"
+            >
+              ×
+            </button>
+            <span>CALIBRATION CIPHER · FOUND BEHIND THE BOOKS</span>
+            <strong>Calibration key: digits 0–9</strong>
+            <div className="cipher-grid">
+              {Object.entries(digitCipher).map(([digit, pair]) => (
+                <div key={digit} className="cipher-entry">
+                  <b>{digit}</b>
+                  <span>{pair.map((shape) => shapeGlyphs[shape]).join('')}</span>
+                </div>
+              ))}
+            </div>
+            <small>Each digit uses two shapes. Decode the cabinet pairs from left to right.</small>
+          </aside>
+        )}
+
+        <div className="desk-trunk">
+          <span>? ? ?</span>
+          <i>⚿</i>
+        </div>
+
+        {state.status !== 'playing' && (
+          <div className="game-result" role="status">
+            <h2>{state.status === 'won' ? 'You escaped!' : 'Time is up'}</h2>
+            <p>
+              {state.status === 'won'
+                ? 'The station airlock is open.'
+                : 'The station has sealed.'}
+            </p>
+            <button type="button" onClick={restartGame}>
+              Restart
+            </button>
+          </div>
+        )}
+        {!state.solvedPuzzles.includes('generatorPanel') && (
+          <div
+            className={`room-darkness${flashlightOn ? ' flashlight-on' : ''}`}
+            aria-hidden="true"
+            style={{
+              '--flashlight-x': `${flashlightPosition.x}%`,
+              '--flashlight-y': `${flashlightPosition.y}%`,
+            } as CSSProperties}
+          />
+        )}
+      </section>
+
+      {showObjectCard && (
+        <aside className="object-card" aria-live="polite">
+          <div className="object-card-heading">
+            <div>
+              <span>Selected object</span>
+              <h2>{selectedPuzzle.name}</h2>
+            </div>
+            <button type="button" onClick={() => setShowObjectCard(false)} aria-label="Close selected object">
+              ×
+            </button>
+          </div>
+
+          {!isUnlocked ? (
+            <p className="object-card-message">Locked. Solve the previous step first.</p>
+          ) : (
+            <>
+              <p className="object-card-clue">{selectedPuzzle.clue}</p>
+              {missingItems.length > 0 && !isSolved && (
+                <p className="required-items">
+                  Requires: {missingItems.map((id) => items[id].name).join(', ')}
+                </p>
+              )}
+
+              {selectedItemId && selectedItemId !== 'flashlight' && (
+                <button
+                  type="button"
+                  disabled={state.status !== 'playing'}
+                  onClick={() =>
+                    dispatch({
+                      type: 'USE_ITEM',
+                      itemId: selectedItemId,
+                      objectId: selectedObjectId,
+                    })
+                  }
+                  className="scene-action use-item-action"
+                >
+                  Use {items[selectedItemId].name}
+                </button>
+              )}
+
+              {isSolved ? (
+                <p className="object-card-message solved-message">Puzzle solved</p>
+              ) : selectedPuzzle.interaction === 'keypad' ? (
+                <KeypadLock
+                  length={puzzleSolution.length}
+                  value={answer}
+                  onChange={setAnswer}
+                  onSubmit={submitSolution}
+                  disabled={state.status !== 'playing' || missingItems.length > 0}
+                />
+              ) : selectedPuzzle.interaction === 'circuit' ? (
+                <CircuitBoard
+                  rotations={circuitRotations}
+                  powered={circuitPowered}
+                  disabled={state.status !== 'playing' || missingItems.length > 0 || isSolved}
+                  onRotate={rotateCircuitTile}
+                />
+              ) : (
+                <form onSubmit={submitNonKeypadPuzzle} className="scene-form">
+                  <label>
+                    Tune frequency
+                    <input
+                      value={answer}
+                      onChange={(event) => setAnswer(event.target.value)}
+                      inputMode="numeric"
+                      autoComplete="off"
+                      aria-label={`${selectedPuzzle.name} solution`}
+                      disabled={state.status !== 'playing'}
+                      placeholder="**"
+                    />
+                  </label>
+                  <button
+                    type="submit"
+                    disabled={state.status !== 'playing'}
+                    className="scene-action"
+                  >
+                    Check
+                  </button>
+                </form>
+              )}
+            </>
+          )}
+        </aside>
+      )}
+
+      <FeedbackToast />
+      <InventoryBar
+        selectedItemId={selectedItemId}
+        onSelectItem={setSelectedItemId}
+        flashlightOn={flashlightOn}
+        onToggleFlashlight={() => setFlashlightOn((isOn) => !isOn)}
+      />
+    </main>
+  );
+}
