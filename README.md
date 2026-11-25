@@ -33,12 +33,16 @@ npm run build
   each new run; these values are saved so refreshes keep the same clues.
 - A starting flashlight can be toggled from the inventory. While the generator
   is unpowered, its beam follows the pointer across the dark room.
+- Arctic ambience loops while the game is active. If the browser blocks
+  autoplay, select the music button in the header to start playback.
+- The escape sound plays when the player successfully opens the exit. If the
+  browser blocks it, select the music button in the header.
 - Puzzle rewards open a confirmation dialog before entering the inventory.
   The player must confirm to add them.
 - Hints give indirect nudges, with a 30-second cooldown between uses. Cooldown
   progress is saved and accounts for time spent away from the game.
-- Existing saves are migrated to include the starting flashlight while
-  preserving the player's progress.
+- Existing saves are migrated to include the starting flashlight and remove the
+  unused UV flashlight while preserving the player's progress.
 - `state/gameReducer.ts` owns game rules and rejects actions that violate
   prerequisites.
 - `components/GameProvider.tsx` provides reducer state to client components.

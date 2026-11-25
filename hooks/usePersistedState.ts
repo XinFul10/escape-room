@@ -6,7 +6,7 @@ import type { GameAction, GameState } from '../types/game';
 const STORAGE_KEY = 'arctic-escape-room-save';
 
 interface PersistedGame {
-  version: 4;
+  version: 5;
   savedAt: number;
   state: GameState;
 }
@@ -14,6 +14,12 @@ interface PersistedGame {
 export interface PersistenceStatus {
   ready: boolean;
   message: string | null;
+}
+
+function removeUnusedUvFlashlight(value: unknown): unknown {
+  return Array.isArray(value)
+    ? value.filter((itemId: unknown) => itemId !== 'uvFlashlight')
+    : value;
 }
 
 function readPersistedGame(value: unknown): PersistedGame | null {
@@ -25,7 +31,10 @@ function readPersistedGame(value: unknown): PersistedGame | null {
     state?: unknown;
   };
   if (
-    (saved.version !== 2 && saved.version !== 3 && saved.version !== 4) ||
+    (saved.version !== 2 &&
+      saved.version !== 3 &&
+      saved.version !== 4 &&
+      saved.version !== 5) ||
     typeof saved.savedAt !== 'number' ||
     !Number.isFinite(saved.savedAt) ||
     saved.savedAt <= 0 ||
@@ -36,24 +45,25 @@ function readPersistedGame(value: unknown): PersistedGame | null {
   }
 
   let state: unknown = saved.state;
-  if (saved.version !== 4) {
+  if (saved.version !== 5) {
     const legacyState = saved.state as Partial<GameState>;
     if (saved.version === 2 && !Array.isArray(legacyState.inventory)) return null;
+    const inventory = removeUnusedUvFlashlight(legacyState.inventory);
     state = {
       ...legacyState,
-      ...(saved.version === 2
-        ? {
-            inventory: legacyState.inventory!.includes('flashlight')
-              ? legacyState.inventory
-              : [...legacyState.inventory!, 'flashlight'],
-          }
-        : {}),
-      hintCooldown: 0,
+      inventory:
+        saved.version === 2 &&
+        Array.isArray(inventory) &&
+        !inventory.includes('flashlight')
+          ? [...inventory, 'flashlight']
+          : inventory,
+      availableItems: removeUnusedUvFlashlight(legacyState.availableItems),
+      ...(saved.version < 4 ? { hintCooldown: 0 } : {}),
     };
   }
 
   if (!isValidGameState(state)) return null;
-  return { version: 4, savedAt: saved.savedAt, state };
+  return { version: 5, savedAt: saved.savedAt, state };
 }
 
 export function usePersistedState(
@@ -129,7 +139,7 @@ export function usePersistedState(
     if (!ready) return;
 
     const saved: PersistedGame = {
-      version: 4,
+      version: 5,
       savedAt: Date.now(),
       state,
     };

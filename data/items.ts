@@ -13,12 +13,6 @@ export const items: Record<ItemId, ItemDefinition> = {
     description: 'A small, worn key from the radio station.',
     inspectText: 'A stamped tag reads: SUPPLY CABINET.',
   },
-  uvFlashlight: {
-    id: 'uvFlashlight',
-    name: 'UV flashlight',
-    description: 'A handheld ultraviolet flashlight.',
-    inspectText: 'Its battery is weak, but it still reveals fluorescent markings.',
-  },
   fuse: {
     id: 'fuse',
     name: 'Power fuse',

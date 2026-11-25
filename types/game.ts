@@ -1,4 +1,4 @@
-export type ItemId = 'flashlight' | 'brassKey' | 'uvFlashlight' | 'fuse' | 'accessCard';
+export type ItemId = 'flashlight' | 'brassKey' | 'fuse' | 'accessCard';
 
 export type PuzzleId =
   | 'radioReceiver'

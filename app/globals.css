@@ -97,6 +97,8 @@ input:focus-visible {
 }
 .game-header button { padding: 0 9px; cursor: pointer; }
 .game-header button:disabled { opacity: .45; cursor: not-allowed; }
+.ambient-audio-button { width: 34px; padding: 0 !important; font-size: 18px; }
+.ambient-audio-error { color: #ffd5a3; font-size: 10px; white-space: nowrap; }
 .hint-button b { color: #77dbe2; }
 .hint-button { white-space: nowrap; }
 .hint-cooldown { color: #f0c77e; font-size: 10px; }
@@ -320,9 +322,9 @@ input:focus-visible {
   transition: filter .16s ease, transform .16s ease;
 }
 .scene-hotspot:hover,
-.scene-hotspot[aria-pressed="true"] {
-  filter: brightness(1.12) drop-shadow(0 0 7px #8ff1ff);
-  transform: translateY(-3px);
+.scene-hotspot:focus-visible {
+  filter: brightness(1.28) drop-shadow(0 0 12px #8ff1ff);
+  transform: translateY(-4px) scale(1.03);
 }
 
 .radio-hotspot { left: 27%; top: 19%; width: 90px; height: 74px; }
@@ -1019,7 +1021,6 @@ input:focus-visible {
   transform: rotate(-35deg);
 }
 .item-brassKey { border-radius: 50%; background: linear-gradient(90deg, #d5a958 0 55%, transparent 56%) 0 0 / 100% 100%, radial-gradient(circle at 50% 50%, #d5a958 0 5px, transparent 6px); }
-.item-uvFlashlight { border-radius: 5px; background: linear-gradient(90deg, #dce7ea 0 15%, #617f92 16% 70%, #dce7ea 71%); }
 .item-fuse { border-radius: 3px; background: linear-gradient(#e9df9d 0 25%, #8b6d51 26% 74%, #e9df9d 75%); }
 .item-accessCard { border-radius: 4px; background: repeating-linear-gradient(0deg, #72a5b8 0 5px, #dfd7bb 6px 8px); }
 .collectible-slot { border-color: #e1b45c; background: #4c4d4a; }

@@ -12,10 +12,16 @@ export const CIRCUIT_ROWS = 3;
 export const CIRCUIT_COLUMNS = 4;
 
 export const CIRCUIT_TILES: readonly CircuitTile[] = [
-  { row: 2, column: 0, shape: 'corner', basePorts: ['north', 'east'] },
+  { row: 0, column: 0, shape: 'corner', basePorts: ['north', 'east'] },
+  { row: 0, column: 1, shape: 'straight', basePorts: ['east', 'west'] },
+  { row: 0, column: 2, shape: 'corner', basePorts: ['north', 'east'] },
+  { row: 0, column: 3, shape: 'straight', basePorts: ['east', 'west'] },
   { row: 1, column: 0, shape: 'corner', basePorts: ['north', 'east'] },
   { row: 1, column: 1, shape: 'straight', basePorts: ['north', 'south'] },
   { row: 1, column: 2, shape: 'corner', basePorts: ['north', 'east'] },
+  { row: 1, column: 3, shape: 'corner', basePorts: ['north', 'east'] },
+  { row: 2, column: 0, shape: 'corner', basePorts: ['north', 'east'] },
+  { row: 2, column: 1, shape: 'straight', basePorts: ['north', 'south'] },
   { row: 2, column: 2, shape: 'corner', basePorts: ['north', 'east'] },
   { row: 2, column: 3, shape: 'straight', basePorts: ['north', 'south'] },
 ];
