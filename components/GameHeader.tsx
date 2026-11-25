@@ -92,7 +92,7 @@ export function GameHeader({ puzzleId, onRestart }: GameHeaderProps) {
 
   return (
     <header className="game-header" aria-label="Game status">
-      <h1><span>⌁</span> Assessment 01 — <strong>The Escape Room</strong></h1>
+      <h1><strong>Arctic Escape Room</strong></h1>
       <audio
         ref={ambientAudio}
         src="/audio/Arctic_ambient_noise.mp3"

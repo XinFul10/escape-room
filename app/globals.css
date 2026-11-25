@@ -57,7 +57,7 @@ input:focus-visible {
 
 .game-shell {
   position: relative;
-  width: min(100%, 1180px);
+  width: min(100%, 1600px);
   min-height: 100vh;
   margin: 0 auto;
   padding: 14px 18px 22px;
@@ -1111,7 +1111,7 @@ input:focus-visible {
 @media (min-width: 1000px) {
   .game-shell {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 230px;
+    grid-template-columns: minmax(0, 1fr) 260px;
     grid-template-areas:
       "header header"
       "room sidebar"
@@ -1124,7 +1124,7 @@ input:focus-visible {
   .game-header { grid-area: header; }
   .room-stage {
     grid-area: room;
-    height: 540px;
+    height: clamp(540px, 72vh, 760px);
     min-height: 540px;
   }
   .object-card {
