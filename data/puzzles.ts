@@ -34,8 +34,8 @@ export const puzzles: Record<PuzzleId, PuzzleDefinition> = {
     requires: ['fuse'],
     grants: ['accessCard'],
     solution: 'POWER-ROUTED',
-    clue: 'Rotate the switchboard tiles to carry power from the lower-left input to the lower-right output.',
-    hint: 'Power cannot jump a gap. Trace a continuous route from the input, and watch where each tile sends it next.',
+    clue: 'Rotate tiles in the 8x8 grid to connect both left-side power feeds through the center lamp to the output on the right. Click a tile to turn it.',
+    hint: 'A wire connects only when both facing edges have a connector. Power must reach the output from both inputs, and the center lamp must light.',
   },
   exitKeypad: {
     id: 'exitKeypad',

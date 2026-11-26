@@ -1,12 +1,12 @@
 import { useEffect, useState, type Dispatch } from 'react';
 import { createRunNumbers } from '../data/runNumbers';
-import { isValidGameState } from '../state/gameReducer';
+import { INITIAL_TIME_SECONDS, isValidGameState } from '../state/gameReducer';
 import type { GameAction, GameState } from '../types/game';
 
 const STORAGE_KEY = 'arctic-escape-room-save';
 
 interface PersistedGame {
-  version: 5;
+  version: 6;
   savedAt: number;
   state: GameState;
 }
@@ -35,7 +35,8 @@ function readPersistedGame(value: unknown): PersistedGame | null {
     (saved.version !== 2 &&
       saved.version !== 3 &&
       saved.version !== 4 &&
-      saved.version !== 5) ||
+      saved.version !== 5 &&
+      saved.version !== 6) ||
     typeof saved.savedAt !== 'number' ||
     !Number.isFinite(saved.savedAt) ||
     saved.savedAt <= 0 ||
@@ -46,7 +47,7 @@ function readPersistedGame(value: unknown): PersistedGame | null {
   }
 
   let state: unknown = saved.state;
-  if (saved.version !== 5) {
+  if (saved.version !== 6) {
     const legacyState = saved.state as Partial<GameState>;
     if (saved.version === 2 && !Array.isArray(legacyState.inventory)) return null;
     const inventory = removeUnusedUvFlashlight(legacyState.inventory);
@@ -60,11 +61,15 @@ function readPersistedGame(value: unknown): PersistedGame | null {
           : inventory,
       availableItems: removeUnusedUvFlashlight(legacyState.availableItems),
       ...(saved.version < 4 ? { hintCooldown: 0 } : {}),
+      timeLeft:
+        typeof legacyState.timeLeft === 'number'
+          ? Math.min(legacyState.timeLeft, INITIAL_TIME_SECONDS)
+          : legacyState.timeLeft,
     };
   }
 
   if (!isValidGameState(state)) return null;
-  return { version: 5, savedAt: saved.savedAt, state };
+  return { version: 6, savedAt: saved.savedAt, state };
 }
 
 export function usePersistedState(
@@ -142,7 +147,7 @@ export function usePersistedState(
     if (!ready) return;
 
     const saved: PersistedGame = {
-      version: 5,
+      version: 6,
       savedAt: Date.now(),
       state,
     };

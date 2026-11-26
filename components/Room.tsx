@@ -1,9 +1,14 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useRef, useState, type FormEvent, type PointerEvent as ReactPointerEvent, type CSSProperties } from 'react';
 import { items } from '../data/items';
 import { puzzles } from '../data/puzzles';
-import { isCircuitComplete, INITIAL_CIRCUIT_ROTATIONS } from '../data/circuit';
+import {
+  CIRCUIT_LEVEL,
+  createScrambledCircuitLevel,
+  type CircuitLevel,
+} from '../data/circuit';
 import { createRunNumbers } from '../data/runNumbers';
 import { digitCipher, encodeNumber, shapeGlyphs } from '../data/shapeCipher';
 import { CircuitBoard } from './CircuitBoard';
@@ -28,7 +33,9 @@ export function Room() {
   const [answer, setAnswer] = useState('');
   const [flashlightOn, setFlashlightOn] = useState(false);
   const [flashlightPosition, setFlashlightPosition] = useState({ x: 50, y: 50 });
-  const [circuitRotations, setCircuitRotations] = useState(INITIAL_CIRCUIT_ROTATIONS);
+  const [circuitLevel, setCircuitLevel] = useState<CircuitLevel>(() =>
+    createScrambledCircuitLevel(CIRCUIT_LEVEL, () => 0.25),
+  );
   const puzzleDialog = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -40,7 +47,13 @@ export function Room() {
     if (!dialog || dialog.open) return;
 
     dialog.showModal();
+    const focusFrame = window.requestAnimationFrame(() => {
+      dialog
+        .querySelector<HTMLButtonElement>('[data-circuit-tile]:not(:disabled)')
+        ?.focus({ preventScroll: true });
+    });
     return () => {
+      window.cancelAnimationFrame(focusFrame);
       if (dialog.open) dialog.close();
     };
   }, [showObjectCard, selectedObjectId]);
@@ -64,11 +77,18 @@ export function Room() {
       <main className="game-shell title-screen-shell">
         <section className="title-screen" aria-labelledby="title-screen-heading">
           <div className="title-screen-copy">
-            <div className="title-screen-mark" aria-hidden="true"></div>
+            <div className="title-screen-mark">
+              <Image
+                src="/logo.jpg"
+                alt="Arctic research station beneath the northern lights"
+                width={58}
+                height={58}
+              />
+            </div>
             <p className="title-screen-eyebrow">ARCTIC RESEARCH STATION · AIRLOCK INCIDENT</p>
             <p className="title-screen-story">
               The station has gone dark. Restore the power, uncover the exit code,
-              and escape before the airlock seals.
+              and escape before the airlock seals. You have 2:30 before the station locks down. Good luck.
             </p>
             {persistence.message && (
               <p className="title-screen-message" role="status">{persistence.message}</p>
@@ -79,6 +99,7 @@ export function Room() {
             className="start-game-button"
             onClick={() => {
               if (state.status !== 'playing') restartGame();
+              else setCircuitLevel(createScrambledCircuitLevel(CIRCUIT_LEVEL));
               startGame();
             }}
           >
@@ -105,11 +126,9 @@ export function Room() {
   const cabinetCipher = encodeNumber(String(state.runNumbers.cabinetCode));
   const exitCodeCipher = encodeNumber(String(state.runNumbers.exitCode));
   const generatorSolved = state.solvedPuzzles.includes('generatorPanel');
-  const circuitPowered = isCircuitComplete(circuitRotations) ||
-    generatorSolved;
 
   function restartGame() {
-    setCircuitRotations(INITIAL_CIRCUIT_ROTATIONS);
+    setCircuitLevel(createScrambledCircuitLevel(CIRCUIT_LEVEL));
     setFlashlightOn(false);
     dispatch({
       type: 'RESTART',
@@ -145,27 +164,6 @@ export function Room() {
     event.preventDefault();
     if (!selectedPuzzle) return;
     submitSolution(answer);
-  }
-
-  function rotateCircuitTile(tileIndex: number) {
-    if (
-      !selectedPuzzle ||
-      selectedPuzzle.id !== 'generatorPanel' ||
-      state.status !== 'playing' ||
-      missingItems.length > 0 ||
-      isSolved
-    ) {
-      return;
-    }
-
-    const nextRotations = circuitRotations.map((rotation, index) =>
-      index === tileIndex ? (rotation + 1) % 4 : rotation,
-    );
-    setCircuitRotations(nextRotations);
-
-    if (isCircuitComplete(nextRotations)) {
-      submitSolution(puzzleSolution);
-    }
   }
 
   const objectCardContent = (
@@ -224,10 +222,12 @@ export function Room() {
             />
           ) : selectedPuzzle.interaction === 'circuit' ? (
             <CircuitBoard
-              rotations={circuitRotations}
-              powered={circuitPowered}
+              level={circuitLevel}
               disabled={state.status !== 'playing' || missingItems.length > 0 || isSolved}
-              onRotate={rotateCircuitTile}
+              solved={isSolved}
+              onChange={setCircuitLevel}
+              onSolved={() => submitSolution(puzzleSolution)}
+              onCancel={() => puzzleDialog.current?.close()}
             />
           ) : (
             <form onSubmit={submitNonKeypadPuzzle} className="scene-form">
@@ -361,20 +361,29 @@ export function Room() {
 
           <button
             type="button"
-            aria-label="Generator panel"
+            aria-label={
+              generatorSolved
+                ? 'Powered generator panel. Interact to inspect.'
+                : 'Unpowered wall-mounted generator panel. Interact to inspect.'
+            }
             aria-pressed={selectedObjectId === 'generator'}
             onClick={() => selectObject('generator')}
-            className="scene-hotspot generator-hotspot"
+            className={`scene-hotspot generator-hotspot${generatorSolved ? ' generator-hotspot-powered' : ''}`}
           >
-            <span
-              className={`generator-screen${circuitPowered ? ' generator-powered' : ''}`}
-              aria-label={circuitPowered ? 'Generator power restored' : 'Rotatable generator switchboard'}
-            >
-              {Array.from({ length: 9 }, (_, index) => <i key={index} />)}
+            <span className={`generator-screen${generatorSolved ? ' generator-powered' : ''}`} aria-hidden="true">
+              <Image
+                src="/circuitbox.png"
+                alt=""
+                fill
+                sizes="(max-width: 700px) 74px, 92px"
+                className="generator-panel-art"
+              />
+              <span className="generator-power-lights">
+                {[0, 1, 2].map((light) => <i key={light} />)}
+              </span>
+              <span className="generator-spark" />
             </span>
-            {state.solvedPuzzles.includes('generatorPanel') && (
-              <span className="solved-dot" aria-label="Solved" />
-            )}
+            <span className="generator-interact-prompt" aria-hidden="true">INTERACT</span>
           </button>
 
           <div className="exit-door">

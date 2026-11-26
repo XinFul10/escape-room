@@ -12,7 +12,8 @@ import type {
 
 export const MAX_HINTS = 3;
 export const HINT_COOLDOWN_SECONDS = 30;
-export const INITIAL_TIME_SECONDS = 12 * 60;
+export const INITIAL_TIME_SECONDS = 2 * 60 + 30;
+export const HINT_TIME_PENALTY_SECONDS = 15;
 
 const initialUnlockedObjects: RoomObjectId[] = ['radio'];
 const initialInventory: ItemId[] = ['flashlight'];
@@ -319,11 +320,20 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           `Wait ${state.hintCooldown} seconds before using another hint.`,
         );
       }
+      const timeLeft = Math.max(
+        0,
+        state.timeLeft - HINT_TIME_PENALTY_SECONDS,
+      );
+      const ranOutOfTime = timeLeft === 0;
       return {
         ...state,
         hintsUsed: state.hintsUsed + 1,
         hintCooldown: HINT_COOLDOWN_SECONDS,
-        feedback: puzzle.hint,
+        timeLeft,
+        status: ranOutOfTime ? 'lost' : state.status,
+        feedback: ranOutOfTime
+          ? 'The hint cost 15 seconds. Time is up; the station is sealed.'
+          : `${puzzle.name}: ${puzzle.hint} (15 seconds deducted.)`,
       };
     }
 

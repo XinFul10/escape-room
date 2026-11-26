@@ -1,8 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { puzzles } from '../data/puzzles';
 import { MAX_HINTS } from '../state/gameReducer';
-import type { PuzzleId } from '../types/game';
+import type { GameState, PuzzleId } from '../types/game';
 import { useGame } from './GameProvider';
 
 type AmbientAudioState = 'idle' | 'playing' | 'blocked' | 'error';
@@ -19,8 +20,23 @@ function formatTime(seconds: number): string {
   return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
 }
 
+function getHintPuzzleId(state: GameState, preferredPuzzleId: PuzzleId): PuzzleId {
+  const isAvailable = (puzzleId: PuzzleId) => {
+    const puzzle = puzzles[puzzleId];
+    return (
+      state.unlockedObjects.includes(puzzle.objectId) &&
+      !state.solvedPuzzles.includes(puzzleId)
+    );
+  };
+
+  if (isAvailable(preferredPuzzleId)) return preferredPuzzleId;
+  return Object.values(puzzles).find((puzzle) => isAvailable(puzzle.id))?.id ??
+    preferredPuzzleId;
+}
+
 export function GameHeader({ puzzleId, onRestart }: GameHeaderProps) {
   const { state, dispatch, persistence } = useGame();
+  const hintPuzzleId = getHintPuzzleId(state, puzzleId);
   const ambientAudio = useRef<HTMLAudioElement>(null);
   const escapeAudio = useRef<HTMLAudioElement>(null);
   const [ambientAudioState, setAmbientAudioState] =
@@ -150,7 +166,7 @@ export function GameHeader({ puzzleId, onRestart }: GameHeaderProps) {
         <button
           type="button"
           className="hint-button"
-          onClick={() => dispatch({ type: 'USE_HINT', puzzleId })}
+          onClick={() => dispatch({ type: 'USE_HINT', puzzleId: hintPuzzleId })}
           disabled={
             state.status !== 'playing' ||
             state.hintsUsed >= MAX_HINTS ||
@@ -158,13 +174,13 @@ export function GameHeader({ puzzleId, onRestart }: GameHeaderProps) {
           }
           aria-label={
             state.hintCooldown > 0
-              ? `Hints remaining: ${MAX_HINTS - state.hintsUsed}. Available in ${state.hintCooldown} seconds.`
-              : `Hints remaining: ${MAX_HINTS - state.hintsUsed}`
+              ? `Hints remaining: ${MAX_HINTS - state.hintsUsed}. Available in ${state.hintCooldown} seconds. Each hint costs 15 seconds.`
+              : `Hints remaining: ${MAX_HINTS - state.hintsUsed}. Each hint costs 15 seconds.`
           }
           title={
             state.hintCooldown > 0
-              ? `Next hint available in ${state.hintCooldown} seconds`
-              : 'Use a hint'
+              ? `Next hint available in ${state.hintCooldown} seconds. Each hint costs 15 seconds.`
+              : 'Use a hint (costs 15 seconds)'
           }
         >
           <span>Hints</span>

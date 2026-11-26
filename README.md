@@ -25,12 +25,15 @@ npm run build
 
 - `data/items.ts` and `data/puzzles.ts` define the items and puzzle dependency
   chain.
-- `data/circuit.ts` defines the switchboard connections and checks for a
-  continuous route from the generator input to its output. The exit code appears
-  on the desk monitor as shape pairs after power is restored.
+- `data/circuit.ts` defines the configurable 8x8 wire panel, rotated edge
+  connections, power tracing, randomized unsolved layouts, and solvability
+  checks. Large levels include a verified rotation solution; smaller levels can
+  be checked by brute force. Both inputs must reach the output and power the
+  center lamp.
 - Selecting a puzzle opens its interaction panel in a modal.
 - The title screen appears before each session; starting or continuing begins
   the countdown and room ambience.
+- Each run has 2 minutes 30 seconds. Using a hint costs 15 seconds.
 - `data/runNumbers.ts` generates fresh radio, cabinet, and exit numbers for
   each new run; these values are saved so refreshes keep the same clues.
 - A starting flashlight can be toggled from the inventory. While the generator
