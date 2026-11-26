@@ -383,7 +383,6 @@ export function Room() {
               </span>
               <span className="generator-spark" />
             </span>
-            <span className="generator-interact-prompt" aria-hidden="true">INTERACT</span>
           </button>
 
           <div className="exit-door">

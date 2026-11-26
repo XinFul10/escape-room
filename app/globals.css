@@ -644,30 +644,6 @@ input:focus-visible {
   pointer-events: none;
 }
 .generator-powered .generator-spark { animation: generator-spark .55s ease-out 1 both; }
-.generator-interact-prompt {
-  position: absolute;
-  z-index: 4;
-  top: -11px;
-  left: 50%;
-  padding: 2px 5px;
-  border: 1px solid #66858a;
-  border-radius: 3px;
-  background: rgba(13, 25, 30, .96);
-  color: #b7e5df;
-  font-size: 7px;
-  font-weight: 800;
-  letter-spacing: .1em;
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(-50%, 2px);
-  transition: opacity .14s ease, transform .14s ease;
-}
-.generator-hotspot:hover .generator-interact-prompt,
-.generator-hotspot:focus-visible .generator-interact-prompt,
-.generator-hotspot[aria-pressed="true"] .generator-interact-prompt {
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
 .generator-hotspot:not(.generator-hotspot-powered)::after {
   position: absolute;
   inset: 2px;
