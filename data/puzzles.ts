@@ -10,7 +10,7 @@ export const puzzles: Record<PuzzleId, PuzzleDefinition> = {
     requires: [],
     grants: ['brassKey'],
     solution: null,
-    clue: 'The station weather band is below its backup relay frequency. A hidden note gives the backup and the offset.',
+    clue: 'The station weather band is below its backup relay frequency.',
     hint: 'Two frequencies are noted near the desk. The receiver uses the lower band; work out how far it sits from the relay.',
   },
   supplyCabinet: {
@@ -22,7 +22,7 @@ export const puzzles: Record<PuzzleId, PuzzleDefinition> = {
     requires: ['brassKey'],
     grants: ['fuse'],
     solution: null,
-    clue: 'The cabinet label uses pairs of shapes instead of digits. Search the room for the full 0–9 cipher.',
+    clue: 'The cabinet label uses pairs of shapes instead of digits.',
     hint: 'The cabinet speaks in pairs of shapes. Somewhere nearby, the station explains how those pairs represent numbers.',
   },
   generatorPanel: {
